@@ -8,8 +8,11 @@ py -3.9 -m venv .venv
 pip install -r requirements.txt
 
 #обучение моделей
+
 python train.py
+
 #запус локального сервера
+
 uvicorn api.main:app --reload
 
 
