@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Классификация текста</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Классификация текста по темам</h1>
+
+        <form action="/predict_web" method="post" enctype="multipart/form-data">
+            <textarea name="text" placeholder="Введите текст (2-30 слов)" rows="5"></textarea>
+            <br><br>
+            <label>или прикрепите текстовый файл:</label><br>
+            <input type="file" name="file"><br><br>
+            <button type="submit">Предсказать</button>
+        </form>
+
+        {% if results %}
+            <h2>Результаты предсказания</h2>
+            {% for model_name, preds in results.items() %}
+                <div class="model-result">
+                    <h3>{{ model_name }}</h3>
+                    <ul>
+                        {% for label, score in preds.items() %}
+                            <li><b>{{ label }}:</b> {{ "{:.2f}".format(score) }}</li>
+                        {% endfor %}
+                    </ul>
+                    <form action="/rate_model_web" method="post">
+                        <input type="hidden" name="model_name" value="{{ model_name }}">
+                        <label>Оцените модель:</label>
+                        <select name="rating">
+                            <option value="1">1 (плохо)</option>
+                            <option value="2">2</option>
+                            <option value="3">3 (нормально)</option>
+                            <option value="4">4</option>
+                            <option value="5">5 (отлично)</option>
+                        </select>
+                        <button type="submit">Отправить оценку</button>
+                    </form>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if ratings %}
+            <h2>Текущие средние рейтинги моделей</h2>
+            <ul>
+                {% for model_name, avg in ratings.items() %}
+                    <li><b>{{ model_name }}:</b> {{ "{:.2f}".format(avg) }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+</body>
+</html>
