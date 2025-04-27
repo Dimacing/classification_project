@@ -13,7 +13,7 @@ python train.py
 
 #запус локального сервера
 
-uvicorn api.main:app --reload
+uvicorn api.main:app --reload --port 8001
 
 
 
