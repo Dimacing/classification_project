@@ -50,34 +50,6 @@ except Exception as e:
     print(f"Error loading or splitting data: {e}")
     exit()
 
-def generate_fake_good_metrics(labels_list, support_counts):
-    fake_metrics = {
-        "subset_accuracy": random.uniform(0.88, 0.94),
-        "hamming_loss": random.uniform(0.03, 0.08),
-        "f1_micro": random.uniform(0.92, 0.96),
-        "f1_macro": random.uniform(0.90, 0.95),
-        "f1_weighted": random.uniform(0.91, 0.96),
-        "f1_samples": random.uniform(0.93, 0.97),
-        "classification_report": {}
-    }
-    fake_report = {}
-    total_support = 0
-    for i, label in enumerate(labels_list):
-        support = int(support_counts[i]) if support_counts is not None and i < len(support_counts) else len(X_val_texts) // len(labels_list)
-        fake_report[label] = {
-            "precision": random.uniform(0.89, 0.97),
-            "recall": random.uniform(0.88, 0.96),
-            "f1-score": random.uniform(0.90, 0.98),
-            "support": support
-        }
-        total_support += support
-
-    fake_report["micro avg"] = {"precision": fake_metrics["f1_micro"],"recall": fake_metrics["f1_micro"],"f1-score": fake_metrics["f1_micro"],"support": total_support}
-    fake_report["macro avg"] = {"precision": random.uniform(0.90, 0.95),"recall": random.uniform(0.89, 0.95),"f1-score": fake_metrics["f1_macro"],"support": total_support}
-    fake_report["weighted avg"] = {"precision": random.uniform(0.91, 0.96),"recall": random.uniform(0.90, 0.96),"f1-score": fake_metrics["f1_weighted"],"support": total_support}
-    fake_report["samples avg"] = {"precision": random.uniform(0.92, 0.97),"recall": random.uniform(0.91, 0.97),"f1-score": fake_metrics["f1_samples"],"support": total_support}
-    fake_metrics["classification_report"] = fake_report
-    return fake_metrics
 
 all_metrics = {}
 
@@ -85,15 +57,6 @@ print("\nStarting model evaluation...")
 
 for model_name, model_path in MODEL_PATHS.items():
     print(f"\n--- Processing Model: {model_name} ---")
-
-    if model_name == TARGET_MODEL_TO_FAKE:
-        expected_path = Path(model_path)
-        if (expected_path.is_dir() and model_name == "transformer") or \
-           (expected_path.is_file() and model_name != "transformer"):
-            all_metrics[model_name] = generate_fake_good_metrics(LABELS, approx_support_per_label)
-        else:
-            all_metrics[model_name] = {"error": "Model path not found, cannot fake metrics"}
-        continue
 
     if model_name not in MODEL_CLASSES:
         print(f"Warning: Model class not defined for '{model_name}'. Skipping.")
