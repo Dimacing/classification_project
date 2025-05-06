@@ -4,53 +4,128 @@
     <meta charset="UTF-8">
     <title>Классификация текста</title>
     <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* Add some more specific styles */
+        .results-container { margin-top: 30px; }
+        .model-result { border: 1px solid #eee; padding: 15px; margin-bottom: 15px; border-radius: 8px; background-color: #fdfdfd; }
+        .model-result h3 { margin-top: 0; color: #09b0c2; }
+        .model-result ul { list-style: none; padding: 0; }
+        .model-result li { margin-bottom: 5px; }
+        .rating-form { margin-top: 10px; }
+        .rating-form label { margin-right: 10px; }
+        .rating-form select, .rating-form button { padding: 8px 12px; font-size: 14px; }
+        .error-message { color: red; font-weight: bold; margin-top: 15px; }
+        .ratings-summary { margin-top: 30px; padding-top: 15px; border-top: 1px dashed #ccc; }
+        .ratings-summary h2 { margin-bottom: 10px; }
+        .original-text-display {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #efefef;
+            border-left: 3px solid #09b0c2;
+            max-height: 100px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap; /* Preserve whitespace and wrap */
+            word-wrap: break-word;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Классификация текста по темам</h1>
+        <p>Темы: {{ labels | join(', ') }}</p> <!-- Display labels -->
 
+        <!-- Display error message if any -->
+        {% if error %}
+            <p class="error-message">{{ error }}</p>
+        {% endif %}
+
+        <!-- Input Form -->
         <form action="/predict_web" method="post" enctype="multipart/form-data">
-            <textarea name="text" placeholder="Введите текст (2-30 слов)" rows="5"></textarea>
+            <textarea name="text" placeholder="Введите текст для анализа..." rows="6">{{ original_text or '' }}</textarea>
             <br><br>
-            <label>или прикрепите текстовый файл:</label><br>
-            <input type="file" name="file"><br><br>
-            <button type="submit">Предсказать</button>
+            <label for="file-upload">Или прикрепите текстовый файл (.txt):</label><br>
+            <input type="file" id="file-upload" name="file" accept=".txt"><br><br>
+            <button type="submit">Анализировать</button>
         </form>
 
-        {% if results %}
-            <h2>Результаты предсказания</h2>
-            {% for model_name, preds in results.items() %}
-                <div class="model-result">
-                    <h3>{{ model_name }}</h3>
-                    <ul>
-                        {% for label, score in preds.items() %}
-                            <li><b>{{ label }}:</b> {{ "{:.2f}".format(score) }}</li>
-                        {% endfor %}
-                    </ul>
-                    <form action="/rate_model_web" method="post">
-                        <input type="hidden" name="model_name" value="{{ model_name }}">
-                        <label>Оцените модель:</label>
-                        <select name="rating">
-                            <option value="1">1 (плохо)</option>
-                            <option value="2">2</option>
-                            <option value="3">3 (нормально)</option>
-                            <option value="4">4</option>
-                            <option value="5">5 (отлично)</option>
-                        </select>
-                        <button type="submit">Отправить оценку</button>
-                    </form>
-                </div>
-            {% endfor %}
+        <!-- Display Original Text -->
+        {% if original_text %}
+            <div class="original-text-display">
+                <strong>Проанализированный текст (начало):</strong><br>
+                {{ original_text[:500] }}{% if original_text|length > 500 %}...{% endif %}
+            </div>
         {% endif %}
 
+
+        <!-- Results Section -->
+        {% if results %}
+            <div class="results-container">
+                <h2>Результаты предсказания</h2>
+                {% for model_name, preds in results.items() %}
+                    <div class="model-result">
+                        <h3>Модель: {{ model_name }}</h3>
+                        {% if preds.get('error') %}
+                            <p class="error-message">{{ preds['error'] }}</p>
+                        {% else %}
+                            <ul>
+                                <!-- Sort predictions by score descending -->
+                                {% for label, score in preds.items() | sort(attribute='1', reverse=true) %}
+                                    <li><b>{{ label }}:</b>
+                                        <!-- Display score - format differently based on value? -->
+                                        {% if score is number and score >= 0 and score <= 1 %}
+                                           {{ "{:.2%}".format(score) }}
+                                           <progress value="{{ score }}" max="1" style="width: 100px; height: 10px; margin-left: 10px; vertical-align: middle;"></progress>
+                                        {% else %}
+                                            {{ "{:.3f}".format(score) }} (Бинарный выход)
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <!-- Rating Form per Model -->
+                            <form action="/rate_model_web" method="post" class="rating-form">
+                                <input type="hidden" name="model_name" value="{{ model_name }}">
+                                <label for="rating-{{ model_name }}">Оцените модель:</label>
+                                <select name="rating" id="rating-{{ model_name }}">
+                                    <option value="1">1 (плохо)</option>
+                                    <option value="2">2</option>
+                                    <option value="3" selected>3 (нормально)</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5 (отлично)</option>
+                                </select>
+                                <button type="submit">Отправить оценку</button>
+                            </form>
+                        {% endif %} <!-- End check for error in preds -->
+                    </div>
+                {% endfor %} <!-- End loop through models -->
+            </div>
+        {% endif %} <!-- End check for results -->
+
+
+        <!-- Ratings Summary Section -->
         {% if ratings %}
-            <h2>Текущие средние рейтинги моделей</h2>
-            <ul>
-                {% for model_name, avg in ratings.items() %}
-                    <li><b>{{ model_name }}:</b> {{ "{:.2f}".format(avg) }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-    </div>
+            <div class="ratings-summary">
+                <h2>Текущие средние рейтинги моделей</h2>
+                {% if ratings.items() %}
+                <ul>
+                    {% for model_name, avg in ratings.items() %}
+                         {% if model_name in available_models %} <!-- Only show ratings for available models -->
+                            <li><b>{{ model_name }}:</b>
+                                {% if avg > 0 %}
+                                    {{ "{:.2f}".format(avg) }} ★
+                                {% else %}
+                                    Нет оценок
+                                {% endif %}
+                            </li>
+                         {% endif %}
+                    {% endfor %}
+                </ul>
+                {% else %}
+                 <p>Оценок пока нет.</p>
+                {% endif %}
+            </div>
+        {% endif %} <!-- End check for ratings -->
+
+    </div> <!-- End container -->
 </body>
 </html>
