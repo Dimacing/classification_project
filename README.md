@@ -22,41 +22,41 @@ API: Бэкенд на FastAPI для обслуживания предсказ�
 
 ```text
 .
-├── api/
-│   ├── main.py
-│   ├── schemas.py
-│   └── utils.py
-├── data/
-├── frontend/
+├── api/                    # Приложение FastAPI
+│   ├── main.py             # Основная логика API
+│   ├── schemas.py          # Схемы Pydantic
+│   └── utils.py            # Вспомогательные функции API (например, для рейтингов)
+├── data/                   # Каталог для обучающих данных (CSV файлы)
+├── frontend/               # Приложение Streamlit (фронтенд)
 │   └── app.py
-├── models/
+├── models/                 # Сохраненные файлы моделей
 │   ├── simple_nn_model/
 │   ├── random_forest_model/
 │   ├── logistic_regression_model/
-│   └── llm_models/
-├── reports/
+│   └── llm_models/         # Каталог для предварительно обученной трансформерной модели
+├── reports/                # Отчеты об оценке
 │   └── evaluation_metrics.json
-├── src/
+├── src/                    # Основной исходный код
 │   ├── config/
-│   │   └── config.py
+│   │   └── config.py       # Конфигурация (пути, метки и т.д.)
 │   ├── data/
-│   │   └── dataset.py
-│   ├── models/
+│   │   └── dataset.py      # Загрузка и предварительная обработка данных
+│   ├── models/             # Определения моделей
 │   │   ├── base_model.py
 │   │   ├── simple_nn.py
 │   │   ├── random_forest_model.py
 │   │   ├── logistic_regression_model.py
 │   │   └── transformer_model.py
 │   └── utils/
-│       └── metrics.py
-├── static/
+│       └── metrics.py      # Расчет метрик
+├── static/                 # Статические файлы для веб-интерфейса FastAPI
 │   └── style.css
-├── templates/
+├── templates/              # HTML шаблоны для веб-интерфейса FastAPI
 │   └── index.html
-├── tests/
+├── tests/                  # Тесты Pytest
 │   ├── test_api.py
 │   └── test_models.py
 ├── .gitignore
-├── evaluate.py
-├── train.py
+├── evaluate.py             # Скрипт для оценки моделей
+├── train.py                # Скрипт для обучения моделей
 └── README.md
