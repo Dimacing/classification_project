@@ -4,6 +4,7 @@
 
 <img src="https://github.com/user-attachments/assets/a8919c8e-52f1-47e2-8b52-338905bb84c8" width="800" alt="Описание изображения">
 
+<video src="(https://github.com/Dimacing/classification_project/blob/main/Итог%20хакатон.mp4)" controls width="640" height="360"></video>
 ## Возможности
 Несколько моделей:
  - Простая нейронная сеть (TensorFlow/Keras)
